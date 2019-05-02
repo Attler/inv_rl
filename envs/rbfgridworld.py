@@ -27,7 +27,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
         self.shape = (9, 9)
 
         nS = np.prod(self.shape)
-        nA = 4
+        nA = 5
 
         self.MAX_Y = self.shape[0]
         self.MAX_X = self.shape[1]

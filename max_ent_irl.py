@@ -1,7 +1,7 @@
 import numpy as np
 from value_iteration import *
 
-def expected_svf(trans_probs, trajs, policy):
+def expected_svf(trans_probs, trajs, policy): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
     mu = np.zeros((n_states, n_t))
@@ -46,8 +46,8 @@ def generate_demons(env, policy, n_trajs=100, len_traj=5):
         env.reset()
         for i in range(len_traj):
             cur_s = env.s
-            action = np.random.choice(np.arange(env.nA), p=policy[cur_s])
-            state, reward, done, _ = env.step(action)
+            policy=best_policy(trans_probs, U)
+            state, reward, done, _ = env.step(policy[cur_s])
             episode.append((cur_s, policy[cur_s], state))
             if done:
                 for _ in range(i + 1, len_traj):

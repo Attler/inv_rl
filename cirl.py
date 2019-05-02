@@ -17,6 +17,7 @@ def expected_svf(trans_probs, trajs, policy): #state value function
     return np.sum(mu, 1)
 
 def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha=0.5):
+
     n_states, d_states = feature_matrix.shape
     _, n_actions, _ = trans_probs.shape
 
@@ -101,7 +102,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
         sum_of_features = np.zeros(len(env.gen_features(0)))
         traj_reward=0
-        eta=0.1 # Eta in the formula from CIRL
+        eta=0.0001 # Eta in the formula from CIRL
 
         for transition in traj:
             sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
@@ -111,20 +112,16 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
         trajs_goodness[i] = traj_reward - eta * np.linalg.norm(sum_of_features - expert_sum_of_features)
 
-
-
-    best_score=max(trajs_goodness.values())
-    #print(trajs_goodness.values())
-
-    eps = 0.1 # in order to select all the trajectories that are near the maximum
-
     pedagogical_trajs=[]
 
-    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:10]
+    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:1]
+
+    print(best_k)
 
     for i, traj in enumerate(possible_trajs):
         if i in best_k:
             pedagogical_trajs.append(traj)
+            print(traj)
 
     return pedagogical_trajs
 
@@ -133,11 +130,11 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
-    #grid = rbfgridworld.RbfGridworldEnv()
+    grid = rbfgridworld.RbfGridworldEnv()
 
 
     from envs import gridworld
-    grid = gridworld.GridworldEnv(shape=(5,5))
+    #grid = gridworld.GridworldEnv(shape=(5,5))
 
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
