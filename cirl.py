@@ -41,16 +41,17 @@ def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha
 def feature_matrix(env):
     return np.eye(env.nS)
 
-def generate_demons(env, policy, n_trajs=100, len_traj=5, epsilon=1e-2):
+
+def generate_demons(env, trans_probs, U, n_trajs=100, len_traj=5):
     trajs = []
     for _ in range(n_trajs):
         episode = []
         env.reset()
         for i in range(len_traj):
             cur_s = env.s
-            action = np.random.choice(np.arange(env.nA), p=policy[cur_s])
-            state, reward, done, _ = env.step(action)
-            episode.append((cur_s, action, state))
+            policy=best_policy(trans_probs, U)
+            state, reward, done, _ = env.step(policy[cur_s])
+            episode.append((cur_s, policy[cur_s], state))
             if done:
                 for _ in range(i + 1, len_traj):
                     episode.append((state, 0, state))
@@ -132,18 +133,18 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
-    grid = rbfgridworld.RbfGridworldEnv()
+    #grid = rbfgridworld.RbfGridworldEnv()
 
 
     from envs import gridworld
-    #grid = gridworld.GridworldEnv(shape=(5,5))
+    grid = gridworld.GridworldEnv(shape=(5,5))
 
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
-    pi = best_policy(trans_probs, U)
+    #pi = best_policy(trans_probs, U)
 
     n_traj = 16
-    expert_trajs = generate_demons(grid, pi, len_traj=n_traj)
+    expert_trajs = generate_demons(grid, trans_probs, U, len_traj=n_traj)
 
     pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 

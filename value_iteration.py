@@ -31,10 +31,12 @@ def best_policy(trans_probs, U):
     n_states, n_actions, _ = trans_probs.shape
     pi = {}
     for s in range(n_states):
-        probs = []
-        for a in range(n_actions):
-            probs.append(expected_utility(a, s, U, trans_probs))
-        pi[s] = np.exp(probs)/sum(np.exp(probs))
+        best_possible_actions=[]
+        best_possible_actions.append(max(range(n_actions), key=lambda a: expected_utility(a, s, U, trans_probs)))
+        for action in range(n_actions):
+            if expected_utility(action, s, U, trans_probs) == expected_utility(best_possible_actions[0], s, U, trans_probs) and action != best_possible_actions[0]:
+                best_possible_actions.append(action)
+        pi[s] = np.random.choice(best_possible_actions)
     return pi
 
 if __name__ == '__main__':
