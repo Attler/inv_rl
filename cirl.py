@@ -13,7 +13,7 @@ def expected_svf(trans_probs, trajs, policy): #state value function
     mu[:, 0] = mu[:, 0] / len(trajs)
     for t in range(1, n_t):
         for s in range(n_states):
-            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, policy[pre_s], s] for pre_s in range(n_states)])
+            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, np.argmax(policy[pre_s]), s] for pre_s in range(n_states)])
     return np.sum(mu, 1)
 
 def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha=0.5):
@@ -41,15 +41,16 @@ def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha
 def feature_matrix(env):
     return np.eye(env.nS)
 
-def generate_demons(env, policy, n_trajs=100, len_traj=5):
+def generate_demons(env, policy, n_trajs=100, len_traj=5, epsilon=1e-2):
     trajs = []
     for _ in range(n_trajs):
         episode = []
         env.reset()
         for i in range(len_traj):
             cur_s = env.s
-            state, reward, done, _ = env.step(policy[cur_s])
-            episode.append((cur_s, policy[cur_s], state))
+            action = np.random.choice(np.arange(env.nA), p=policy[cur_s])
+            state, reward, done, _ = env.step(action)
+            episode.append((cur_s, action, state))
             if done:
                 for _ in range(i + 1, len_traj):
                     episode.append((state, 0, state))
@@ -79,15 +80,13 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     #Expert sum of features
 
-    expert_sum_of_features=np.array([0,0])
+    expert_sum_of_features = np.zeros(len(env.gen_features(0)))
 
     for traj in expert_trajs:
 
         for transition in traj:
-            y, x = np.unravel_index(transition[0], env.shape)
-            expert_sum_of_features += [y, x] #setting features = coordinates
-        y, x = np.unravel_index(traj[-1][2], env.shape)
-        expert_sum_of_features += [y, x]
+            expert_sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
+        expert_sum_of_features += env.gen_features(traj[-1][2])
 
     expert_sum_of_features = expert_sum_of_features / len(expert_trajs)
 
@@ -99,39 +98,32 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     for i, traj in enumerate(possible_trajs):
 
-        sum_of_features = np.array([0.0,0.0])
+        sum_of_features = np.zeros(len(env.gen_features(0)))
         traj_reward=0
         eta=0.1 # Eta in the formula from CIRL
 
         for transition in traj:
-            y, x = np.unravel_index(transition[0], env.shape)
-            sum_of_features += [y, x] #setting features = coordinates
+            sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
             traj_reward += transition[3]
 
-        y, x = np.unravel_index(traj[-1][2], env.shape)
-        sum_of_features += [y, x]
+        sum_of_features += env.gen_features(traj[-1][2])
 
         trajs_goodness[i] = traj_reward - eta * np.linalg.norm(sum_of_features - expert_sum_of_features)
 
 
 
     best_score=max(trajs_goodness.values())
-    print("best_score ", best_score)
     #print(trajs_goodness.values())
 
     eps = 0.1 # in order to select all the trajectories that are near the maximum
 
     pedagogical_trajs=[]
 
-    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:40]
+    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:10]
 
     for i, traj in enumerate(possible_trajs):
         if i in best_k:
             pedagogical_trajs.append(traj)
-
-    print("="*20)
-    for trj in pedagogical_trajs:
-        print(trj)
 
     return pedagogical_trajs
 
