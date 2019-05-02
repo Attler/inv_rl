@@ -26,11 +26,8 @@ class CirlWrapper(gym.Wrapper):
         """
         super(CirlWrapper, self).__init__(env)
         self.expert_features = expert_features
-        self.d = env.feature_dimensionality()[0]
 
         assert self.expert_features.shape == (self.d,)
-
-        self.feature_trajectory = np.empty((0,self.d))
 
         self.traj_state = traj_state
         self.obs_n = self.observation_space.n
@@ -42,10 +39,6 @@ class CirlWrapper(gym.Wrapper):
 
     def step(self, action):
         next_state, reward, terminated, info = self.env.step(action)
-        f = info["features"]
-
-        self.feature_trajectory = np.concatenate(
-            (self.feature_trajectory, f), axis=0)
 
         if terminated:
             reward -= self.feature_dist()
@@ -61,20 +54,10 @@ class CirlWrapper(gym.Wrapper):
         )
 
     def reset(self):
-        self.feature_trajectory = np.empty((0,self.d))
         s = self.env.reset()
         if self.traj_state:
             s = self.traj_state_vector(s)
         return s
-
-    def avg_traj(self):
-        """ Returns ndarray of size (d,) corresponding to the average features
-        across the current trajectory
-        """
-        if self.feature_trajectory.shape[0]:
-            return self.feature_trajectory.mean(axis=0)
-        else:
-            return np.zeros(self.d,)
 
     def feature_dist(self, eta=.01):
         """ Returns the l2 distance of the average features for the current

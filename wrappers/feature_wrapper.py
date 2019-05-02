@@ -25,10 +25,14 @@ class FeatureWrapper(gym.Wrapper):
         super(FeatureWrapper, self).__init__(env)
         self.current_state = None
 
+        self.d = env.feature_dimensionality()[0]
+        self.feature_trajectory = np.empty((0,self.d))
+
     def reset(self, **kwargs):  # pylint: disable=method-hidden, R0801
         """ Reset environment and return initial state.
         No changes to base class reset function."""
         self.current_state = self.env.reset()
+        self.feature_trajectory = np.empty((0,self.d))
         return self.current_state
 
     def step(self, action: Union[np.ndarray, int, float]
@@ -56,10 +60,22 @@ class FeatureWrapper(gym.Wrapper):
         info['features'] = self.features(self.current_state, action,
                                          next_state)
 
+        self.feature_trajectory = np.concatenate(
+            (self.feature_trajectory, info['features']), axis=0)
+
         # remember which state we are in:
         self.current_state = next_state
 
         return next_state, reward, terminated, info
+
+    def avg_traj(self):
+        """ Returns ndarray of size (d,) corresponding to the average features
+        across the current trajectory
+        """
+        if self.feature_trajectory.shape[0]:
+            return self.feature_trajectory.mean(axis=0)
+        else:
+            return np.zeros(self.d,)
 
     @abstractmethod
     def features(self, current_state: Union[np.ndarray, int, float],
