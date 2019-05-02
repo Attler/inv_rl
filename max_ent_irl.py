@@ -74,9 +74,10 @@ if __name__ == '__main__':
     print(res)
 
     import matplotlib.pyplot as plt
+    from matplotlib import cm
 
 
-    plt.matshow(grid.grid, 1)
+    plt.matshow(grid.grid, 1, cmap=cm.Blues_r)
 
     def to_mat(res, shape):
         dst = np.zeros(shape)
@@ -84,13 +85,14 @@ if __name__ == '__main__':
             dst[i // shape[1], i % shape[1]] = v
         return dst
 
-    plt.matshow(to_mat(res, grid.shape), 2)
+    plt.matshow(to_mat(res, grid.shape), 2, cmap=cm.Blues_r)
     xs = []
     ys = []
 
-    for step in trajs[0]:
-        y, x = np.unravel_index(step[0], grid.shape)
-        xs.append(x)
-        ys.append(y)
-    plt.scatter(xs, ys, marker='X', color='Black')
+    for traj in trajs:
+        for step in traj:
+            y, x = np.unravel_index(step[0], grid.shape)
+            xs.append(x)
+            ys.append(y)
+        plt.scatter(xs, ys, marker='X', color='Black')
     plt.show()
