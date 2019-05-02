@@ -123,3 +123,11 @@ class GridworldEnv(discrete.DiscreteEnv):
                 outfile.write("\n")
 
             it.iternext()
+
+    def gen_features(self, state):
+
+        y, x = np.unravel_index(state, self.shape)
+
+        features = [np.linalg.norm([(x, y), (0, 0)]),
+                    np.linalg.norm([(x, y), (self.MAX_X, self.MAX_Y)])]
+        return features

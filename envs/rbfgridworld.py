@@ -1,6 +1,7 @@
 import numpy as np
 from gym.envs.toy_text import discrete
 from scipy.interpolate import Rbf
+from scipy.spatial.distance import euclidean
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -23,10 +24,10 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
     def __init__(self):
 
-        self.shape = (10, 10)
+        self.shape = (9, 9)
 
         nS = np.prod(self.shape)
-        nA = 5
+        nA = 4
 
         self.MAX_Y = self.shape[0]
         self.MAX_X = self.shape[1]
@@ -38,6 +39,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
         x = (2, 6, 4)
         y = (3, 3, 5)
         d = (1, 1, -1)
+        self.centers = (x, y)
 
         xi = np.linspace(0, self.shape[0]-1, self.shape[0])
         yi = np.linspace(0, self.shape[1]-1, self.shape[1])
@@ -87,7 +89,10 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
         # Initial state distribution is uniform
         isd = np.zeros(nS)
-        isd[nS//2 - 6] = 1
+
+        start = np.ravel_multi_index((self.MAX_Y//2, self.MAX_X//2), self.shape)
+
+        isd[start] = 1
 
         # We expose the model of the environment for educational purposes
         # This should not be used in any model-free learning algorithm
@@ -109,5 +114,18 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
             ax, ay = np.unravel_index(self.s, self.shape)
             plt.scatter(ax+0.5, ay+0.5, c='black', marker='x')
             plt.show()
+
+    def gen_features(self, state):
+
+        y, x = np.unravel_index(state, self.shape)
+
+        features = []
+        for i in range(len(self.centers[0])):
+            dist = np.linalg.norm([(x, y), (self.centers[0][i], self.centers[1][i])])
+            features.append(dist)
+        return features
+
+
+
 
 

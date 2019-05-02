@@ -10,7 +10,7 @@ def expected_svf(trans_probs, trajs, policy):
     mu[:, 0] = mu[:, 0] / len(trajs)
     for t in range(1, n_t):
         for s in range(n_states):
-            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, policy[pre_s], s] for pre_s in range(n_states)])
+            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, np.argmax(policy[pre_s]), s] for pre_s in range(n_states)])
     return np.sum(mu, 1)
             
 def max_ent_irl(feature_matrix, trans_probs, trajs,
@@ -46,7 +46,8 @@ def generate_demons(env, policy, n_trajs=100, len_traj=5):
         env.reset()
         for i in range(len_traj):
             cur_s = env.s
-            state, reward, done, _ = env.step(policy[cur_s])
+            action = np.random.choice(np.arange(env.nA), p=policy[cur_s])
+            state, reward, done, _ = env.step(action)
             episode.append((cur_s, policy[cur_s], state))
             if done:
                 for _ in range(i + 1, len_traj):
