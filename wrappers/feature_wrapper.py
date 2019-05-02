@@ -25,7 +25,7 @@ class FeatureWrapper(gym.Wrapper):
         super(FeatureWrapper, self).__init__(env)
         self.current_state = None
 
-        self.d = env.feature_dimensionality()[0]
+        self.d = self.feature_dimensionality()[0]
         self.feature_trajectory = np.empty((0,self.d))
 
     def reset(self, **kwargs):  # pylint: disable=method-hidden, R0801
