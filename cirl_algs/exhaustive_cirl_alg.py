@@ -1,4 +1,7 @@
-import BaseCirlAlg
+import gym
+import numpy as np
+
+from cirl_algs.base_cirl_alg import BaseCirlAlg
 
 from math import inf
 from tqdm import tqdm
@@ -10,7 +13,7 @@ class ExhaustiveCirlAlg(BaseCirlAlg):
     """
 
     def __init__(self, env: gym.Env, exptected_features):
-        super(ExhaustiveSearchCIRL, self).__init__(env, exptected_features)
+        super(ExhaustiveCirlAlg, self).__init__(env, exptected_features)
 
     def cirl_trajectory(self, limit=None):
         """ Finds the most pedalogical trajectory, as defined by equation (1)

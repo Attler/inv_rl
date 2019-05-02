@@ -3,8 +3,6 @@ import numpy as np
 import gym
 from gym.envs.registration import register
 
-from wrappers import FeatureWrapper
-
 from utils.general import to_one_hot
 
 
@@ -20,17 +18,17 @@ class CirlWrapper(gym.Wrapper):
         """
         env: gym.Env
             The gym environment to be wrapped.
+            This needs to be a featured algorithm, as if wrapped byFeatureWrapper!
 
-        expert_features: numpy array of size (d)
+        expert_features: numpy array of shape (d,)
             where d is the feature size of the env
             The feature distribution we are trying to match
         """
-        super(CIRLRewards, self).__init__(env)
+        super(CirlWrapper, self).__init__(env)
         self.expert_features = expert_features
         self.d = env.feature_dimensionality()[0]
 
-        assert is_unwrappable_to(env, feature_wrapper.FeatureWrapper)
-        assert self.expert_features.shape[1] == self.d
+        assert self.expert_features.shape == (self.d,)
 
         self.feature_trajectory = np.empty((0,self.d))
 

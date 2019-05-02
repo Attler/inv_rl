@@ -5,6 +5,7 @@ import gym
 import numpy as np
 
 from wrappers import CirlWrapper
+from cirl_algs.base_cirl_alg import BaseCirlAlg
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Reshape
@@ -22,7 +23,7 @@ class RLSearchCirlAlg(BaseCirlAlg):
     """
 
     def __init__(self, env: gym.Env, exptected_features):
-        super(RLSearchCIRL, self).__init__(env, exptected_features, traj_state=True)
+        super(RLSearchCirlAlg, self).__init__(env, exptected_features, traj_state=True)
 
     def DQN_agent(self, limit=None):
         """ Trains a DQN agent to find the most pedalogical trajectory,

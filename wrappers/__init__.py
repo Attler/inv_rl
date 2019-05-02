@@ -1,2 +1,2 @@
-from .cirl_wraper import CirlWrapper
-from .feature_wrapper import GridPosFeatureWrapper
+from wrappers.cirl_wrapper import CirlWrapper
+from wrappers.feature_wrapper import GridPosFeatureWrapper

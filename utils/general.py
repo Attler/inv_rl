@@ -3,13 +3,11 @@
 from typing import Callable, List, Union
 
 import numpy as np
-import torch
-
 
 def to_one_hot(hot_vals: Union[int, List[int], np.ndarray],
                max_val: int,
                zeros_function: Callable = np.zeros
-               ) -> Union[np.ndarray, torch.tensor]:
+               ) -> Union[np.ndarray]:
     """ Convert an integer or a list of integers to a one-hot array.
 
     Parameters
