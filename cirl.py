@@ -4,7 +4,7 @@ import itertools
 
 
 '''''' #From irl-me
-def expected_svf(trans_probs, trajs, policy): #state value function
+def expected_svf(trans_probs, trajs, trans_probs, U): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
     mu = np.zeros((n_states, n_t))
@@ -13,7 +13,7 @@ def expected_svf(trans_probs, trajs, policy): #state value function
     mu[:, 0] = mu[:, 0] / len(trajs)
     for t in range(1, n_t):
         for s in range(n_states):
-            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, policy[pre_s], s] for pre_s in range(n_states)])
+            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, best_policy(trans_probs, U)[pre_s], s] for pre_s in range(n_states)])
     return np.sum(mu, 1)
 
 def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha=0.5):
@@ -30,8 +30,8 @@ def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha
     for _ in range(n_epoch):
         r = feature_matrix.dot(theta)
         v = value_iteration(trans_probs, r, gamma)
-        pi = best_policy(trans_probs, v)
-        exp_svf = expected_svf(trans_probs, trajs, pi)
+        #pi = best_policy(trans_probs, v)
+        exp_svf = expected_svf(trans_probs, trajs, trans_probs, U)
         grad = feature_exp - feature_matrix.T.dot(exp_svf)
         theta += alpha * grad
 
@@ -41,13 +41,14 @@ def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha
 def feature_matrix(env):
     return np.eye(env.nS)
 
-def generate_demons(env, policy, n_trajs=100, len_traj=5):
+def generate_demons(env, trans_probs, U, n_trajs=100, len_traj=5):
     trajs = []
     for _ in range(n_trajs):
         episode = []
         env.reset()
         for i in range(len_traj):
             cur_s = env.s
+            policy=best_policy(trans_probs, U)
             state, reward, done, _ = env.step(policy[cur_s])
             episode.append((cur_s, policy[cur_s], state))
             if done:
@@ -148,10 +149,10 @@ if __name__ == '__main__':
 
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
-    pi = best_policy(trans_probs, U)
+    #pi = best_policy(trans_probs, U)
 
     n_traj = 16
-    expert_trajs = generate_demons(grid, pi, len_traj=n_traj)
+    expert_trajs = generate_demons(grid, trans_probs, U, len_traj=n_traj)
 
     pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 
