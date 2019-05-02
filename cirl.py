@@ -1,9 +1,12 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
 from value_iteration import *
 import itertools
 
 
-'''''' #From irl-me
+#From irl-me
 def expected_svf(trans_probs, trajs, policy): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
@@ -55,15 +58,15 @@ def generate_demons(env, trans_probs, U, n_trajs=100, len_traj=5):
             episode.append((cur_s, policy[cur_s], state))
             if done:
                 for _ in range(i + 1, len_traj):
-                    episode.append((state, 0, state))
+                    episode.append((state, 5, state))
                 break
         trajs.append(episode)
     return trajs
 
 
 def generate_pedagogic(expert_trajs, env, len_traj=10):
-
-    #Generate all possible trajectories
+    
+#Generate all possible trajectories
     possible_trajs = []
 
     all_possible_action_combinations = itertools.combinations_with_replacement(np.arange(env.nA), len_traj)
@@ -81,11 +84,9 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
 
     #Expert sum of features
-
     expert_sum_of_features = np.zeros(len(env.gen_features(0)))
 
     for traj in expert_trajs:
-
         for transition in traj:
             expert_sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
         expert_sum_of_features += env.gen_features(traj[-1][2])
@@ -98,11 +99,10 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     #print(possible_trajs[45])
 
+    eta=0.0001 # Eta in the formula from CIRL
     for i, traj in enumerate(possible_trajs):
-
         sum_of_features = np.zeros(len(env.gen_features(0)))
         traj_reward=0
-        eta=0.0001 # Eta in the formula from CIRL
 
         for transition in traj:
             sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
@@ -114,7 +114,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     pedagogical_trajs=[]
 
-    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:1]
+    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:2]
 
     print(best_k)
 
@@ -125,45 +125,62 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     return pedagogical_trajs
 
+def to_mat(res, shape):
+    dst = np.zeros(shape)
+    for i, v in enumerate(res):
+        dst[i // shape[1], i % shape[1]] = v
+    return dst
 
         
 
 if __name__ == '__main__':
     from envs import rbfgridworld
     grid = rbfgridworld.RbfGridworldEnv()
-
-
     from envs import gridworld
     #grid = gridworld.GridworldEnv(shape=(5,5))
+
 
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
     #pi = best_policy(trans_probs, U)
 
+    # Trajectories
     n_traj = 16
     expert_trajs = generate_demons(grid, trans_probs, U, len_traj=n_traj)
-
     pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 
-    res = max_ent_irl(feature_matrix(grid), trans_probs, pedagogic_trajs)
-    print(res)
+    # Learning
+    res_irl  = max_ent_irl(feature_matrix(grid), trans_probs, expert_trajs)
+    res_cirl = max_ent_irl(feature_matrix(grid), trans_probs, pedagogic_trajs)
+    print("IRL:", res_irl)
+    print("CIRL:", res_cirl)
+    ##############################################################################
 
-    import matplotlib.pyplot as plt
-    from matplotlib import cm
+    ax1 = plt.subplot(1,3,1)
+    ax1.set_title("GroundTruth Rewards")
+    plt.matshow(grid.grid, cmap=cm.Blues_r, fignum=False)
 
-    plt.matshow(grid.grid, 1, cmap=cm.Blues_r)
+    ######IRL
+    ax2 = plt.subplot(1,3,2)
+    ax2.set_title("IRL Rewards")
+    plt.matshow(to_mat(res_irl, grid.shape), cmap=cm.Blues_r, fignum=False)
+    xs = []
+    ys = []
+    for traj in expert_trajs:
+        for step in traj:
+            y, x = np.unravel_index(step[0], grid.shape)
+            xs.append(x)
+            ys.append(y)
+        plt.scatter(xs, ys, marker='X', color='Black')
 
-    def to_mat(res, shape):
-        dst = np.zeros(shape)
-        for i, v in enumerate(res):
-            dst[i // shape[1], i % shape[1]] = v
-        return dst
 
-    plt.matshow(to_mat(res, grid.shape),2, cmap=cm.Blues_r)
+    ######CIRL
+    ax1 = plt.subplot(1,3,3)
+    ax1.set_title("CIRL Rewards")
+    plt.matshow(to_mat(res_cirl, grid.shape), cmap=cm.Blues_r, fignum=False)
 
     xs = []
     ys = []
-
     for traj in pedagogic_trajs:
         for step in traj:
             y, x = np.unravel_index(step[0], grid.shape)

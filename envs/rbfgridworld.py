@@ -38,7 +38,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
         # x,y -> coord, d -> value
         x = (2, 6, 4)
         y = (3, 3, 5)
-        d = (1, 1, -1)
+        d = (1, 0.95, -1)
         self.centers = (x, y)
 
         xi = np.linspace(0, self.shape[0]-1, self.shape[0])
