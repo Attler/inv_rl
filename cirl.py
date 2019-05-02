@@ -62,15 +62,17 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     #Generate all possible trajectories
     possible_trajs = []
-    #for state in range(env.nS):
 
-    all_possible_action_combinations = itertools.combinations_with_replacement((0, 1, 2, 3), len_traj)
+    all_possible_action_combinations = itertools.combinations_with_replacement(np.arange(env.nA), len_traj)
     for combination in all_possible_action_combinations:
         state0 = env.reset()
         traj=[]
         for action in combination:
+
+            # P[state][action] = [(prob, n_state, reward, is_done)]
+
             # state, action, n_state, reward
-            traj.append((state0,action,env.P[state0][action][0][1],env.P[state0][action][0][2])) #this line may contain an error. The third element is next_state
+            traj.append((state0, action, env.P[state0][action][0][1], env.P[state0][action][0][2]))
             state0 = env.P[state0][action][0][1] #Update the current state to the new one
         possible_trajs.append(traj)
 
@@ -82,8 +84,10 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
     for traj in expert_trajs:
 
         for transition in traj:
-            expert_sum_of_features += [transition[0] % env.MAX_X, transition[0]-(transition[0] % env.MAX_X)] #setting features = coordinates
-        expert_sum_of_features += [traj[-1][2] % env.MAX_X, traj[-1][2]-(traj[-1][2] % env.MAX_X)]
+            y, x = np.unravel_index(transition[0], env.shape)
+            expert_sum_of_features += [y, x] #setting features = coordinates
+        y, x = np.unravel_index(traj[-1][2], env.shape)
+        expert_sum_of_features += [y, x]
 
     expert_sum_of_features = expert_sum_of_features / len(expert_trajs)
 
@@ -100,10 +104,12 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
         eta=0.1 # Eta in the formula from CIRL
 
         for transition in traj:
-            sum_of_features += (transition[0] % env.MAX_X, transition[0]-(transition[0] % env.MAX_X)) #setting features = coordinates
+            y, x = np.unravel_index(transition[0], env.shape)
+            sum_of_features += [y, x] #setting features = coordinates
             traj_reward += transition[3]
 
-        sum_of_features += [traj[-1][2] % env.MAX_X, traj[-1][2]-(traj[-1][2] % env.MAX_X)]
+        y, x = np.unravel_index(traj[-1][2], env.shape)
+        sum_of_features += [y, x]
 
         trajs_goodness[i] = traj_reward - eta * np.linalg.norm(sum_of_features - expert_sum_of_features)
 
@@ -117,7 +123,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     pedagogical_trajs=[]
 
-    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:5]
+    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:40]
 
     for i, traj in enumerate(possible_trajs):
         if i in best_k:
@@ -134,25 +140,28 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
-    #grid = rbfgridworld.RbfGridworldEnv()
+    grid = rbfgridworld.RbfGridworldEnv()
 
 
     from envs import gridworld
-    grid = gridworld.GridworldEnv(shape=(5,5))
+    #grid = gridworld.GridworldEnv(shape=(5,5))
 
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
     pi = best_policy(trans_probs, U)
 
-    expert_trajs = generate_demons(grid, pi)
+    n_traj = 16
+    expert_trajs = generate_demons(grid, pi, len_traj=n_traj)
 
-    pedagogic_trajs = generate_pedagogic(expert_trajs, grid)
+    pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 
     res = max_ent_irl(feature_matrix(grid), trans_probs, pedagogic_trajs)
     print(res)
 
     import matplotlib.pyplot as plt
-    plt.matshow(grid.grid, 1)
+    from matplotlib import cm
+
+    plt.matshow(grid.grid, 1, cmap=cm.Blues_r)
 
     def to_mat(res, shape):
         dst = np.zeros(shape)
@@ -160,12 +169,12 @@ if __name__ == '__main__':
             dst[i // shape[1], i % shape[1]] = v
         return dst
 
-    plt.matshow(to_mat(res, grid.shape),2)
+    plt.matshow(to_mat(res, grid.shape),2, cmap=cm.Blues_r)
 
     xs = []
     ys = []
 
-    for traj in pedagogic_trajs[:2]:
+    for traj in pedagogic_trajs:
         for step in traj:
             y, x = np.unravel_index(step[0], grid.shape)
             xs.append(x)
