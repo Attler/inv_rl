@@ -4,7 +4,7 @@ import itertools
 
 
 '''''' #From irl-me
-def expected_svf(trans_probs, trajs, trans_probs, U): #state value function
+def expected_svf(trans_probs, trajs, policy): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
     mu = np.zeros((n_states, n_t))
@@ -13,7 +13,7 @@ def expected_svf(trans_probs, trajs, trans_probs, U): #state value function
     mu[:, 0] = mu[:, 0] / len(trajs)
     for t in range(1, n_t):
         for s in range(n_states):
-            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, best_policy(trans_probs, U)[pre_s], s] for pre_s in range(n_states)])
+            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, policy[pre_s], s] for pre_s in range(n_states)])
     return np.sum(mu, 1)
 
 def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha=0.5):
@@ -30,8 +30,8 @@ def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha
     for _ in range(n_epoch):
         r = feature_matrix.dot(theta)
         v = value_iteration(trans_probs, r, gamma)
-        #pi = best_policy(trans_probs, v)
-        exp_svf = expected_svf(trans_probs, trajs, trans_probs, U)
+        pi = best_policy(trans_probs, v)
+        exp_svf = expected_svf(trans_probs, trajs, pi)
         grad = feature_exp - feature_matrix.T.dot(exp_svf)
         theta += alpha * grad
 
@@ -141,11 +141,11 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
-    grid = rbfgridworld.RbfGridworldEnv()
+    #grid = rbfgridworld.RbfGridworldEnv()
 
 
     from envs import gridworld
-    #grid = gridworld.GridworldEnv(shape=(5,5))
+    grid = gridworld.GridworldEnv(shape=(5,5))
 
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
