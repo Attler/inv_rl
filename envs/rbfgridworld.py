@@ -74,18 +74,17 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
                 P[s][LEFT] = [(1.0, s, reward, True)]
                 P[s][NULL] = [(1.0, s, reward, True)]
             # Not a terminal state
-            #else:
+            else:
+                ns_up = s if y == 0 else s - self.MAX_X
+                ns_right = s if x == (self.MAX_X - 1) else s + 1
+                ns_down = s if y == (self.MAX_Y - 1) else s + self.MAX_X
+                ns_left = s if x == 0 else s - 1
 
-            ns_up = s if y == 0 else s - self.MAX_X
-            ns_right = s if x == (self.MAX_X - 1) else s + 1
-            ns_down = s if y == (self.MAX_Y - 1) else s + self.MAX_X
-            ns_left = s if x == 0 else s - 1
-
-            P[s][UP] = [(1.0, ns_up, reward, False)]
-            P[s][RIGHT] = [(1.0, ns_right, reward, False)]
-            P[s][DOWN] = [(1.0, ns_down, reward, False)]
-            P[s][LEFT] = [(1.0, ns_left, reward, False)]
-            P[s][NULL] = [(1.0, s, reward, False)]
+                P[s][UP] = [(1.0, ns_up, reward, False)]
+                P[s][RIGHT] = [(1.0, ns_right, reward, False)]
+                P[s][DOWN] = [(1.0, ns_down, reward, False)]
+                P[s][LEFT] = [(1.0, ns_left, reward, False)]
+                P[s][NULL] = [(1.0, s, reward, False)]
 
             it.iternext()
 
@@ -124,7 +123,8 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
         features = []
         for i in range(len(self.centers[0])):
-            dist = np.linalg.norm([(x, y), (self.centers[0][i], self.centers[1][i])])
+            diff = np.array((x, y)) - np.array((self.centers[0][i], self.centers[1][i]))
+            dist = np.linalg.norm(diff)
             features.append(dist)
         return features
 

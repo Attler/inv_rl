@@ -46,6 +46,10 @@ def feature_matrix(env):
     return np.eye(env.nS)
 
 
+def dist_feature_matrix(env):
+    return np.array([env.gen_features(s) for s in range(env.nS)])
+
+
 def generate_demons(env, trans_probs, U, n_trajs=100, len_traj=5):
     trajs = []
     for _ in range(n_trajs):
@@ -88,7 +92,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     for traj in expert_trajs:
         for transition in traj:
-            expert_sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
+            expert_sum_of_features += env.gen_features(transition[0])
         expert_sum_of_features += env.gen_features(traj[-1][2])
 
     expert_sum_of_features = expert_sum_of_features / len(expert_trajs)
@@ -100,6 +104,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
     #print(possible_trajs[45])
 
     eta=0.0001 # Eta in the formula from CIRL
+
     for i, traj in enumerate(possible_trajs):
         sum_of_features = np.zeros(len(env.gen_features(0)))
         traj_reward=0
@@ -114,7 +119,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     pedagogical_trajs=[]
 
-    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:2]
+    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:3]
 
     print(best_k)
 
