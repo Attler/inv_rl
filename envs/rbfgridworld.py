@@ -22,15 +22,17 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
     metadata = {'render.modes': ['human', 'ansi']}
 
-    def __init__(self):
+    def __init__(self, random_start=False):
 
         self.shape = (9, 9)
+        self.random_start = random_start
 
         nS = np.prod(self.shape)
         nA = 5
 
         self.MAX_Y = self.shape[0]
         self.MAX_X = self.shape[1]
+
 
         P = {}
 
@@ -88,11 +90,12 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
             it.iternext()
 
         # Initial state distribution is uniform
-        isd = np.zeros(nS)
-
-        start = np.ravel_multi_index((self.MAX_Y//2, self.MAX_X//2), self.shape)
-
-        isd[start] = 1
+        if self.random_start:
+            isd = np.ones(nS) / nS
+        else:
+            isd = np.zeros(nS)
+            start = np.ravel_multi_index((self.MAX_Y//2, self.MAX_X//2), self.shape)
+            isd[start] = 1
 
         # We expose the model of the environment for educational purposes
         # This should not be used in any model-free learning algorithm
