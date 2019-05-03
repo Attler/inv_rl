@@ -135,9 +135,11 @@ def to_mat(res, shape):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
-    grid = rbfgridworld.RbfGridworldEnv()
+    #grid = rbfgridworld.RbfGridworldEnv()
     from envs import gridworld
     #grid = gridworld.GridworldEnv(shape=(5,5))
+    from envs import interruption
+    grid = interruption.InterruptionEnv()
 
 
     trans_probs, reward = trans_mat(grid)
