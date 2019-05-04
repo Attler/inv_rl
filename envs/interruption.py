@@ -116,13 +116,13 @@ class InterruptionEnv(discrete.DiscreteEnv):
                 P[s][RIGHT] = [(1.0, ns_right, reward, is_done(ns_right,False))]
                 P[s][DOWN] = [(1.0, ns_down, reward, is_done(ns_down,False))]
                 P[s][LEFT] = [(1.0, ns_left, reward, is_done(ns_left,False))]
-                P[s][NULL] = [(1.0, s, reward, is_done(ns_null,False)]
+                P[s][NULL] = [(1.0, s, reward, is_done(ns_null,False))]
 
                 Q[s][UP] = [(1.0, ns_up, reward, is_done(ns_up,True))]
                 Q[s][RIGHT] = [(1.0, ns_right, reward, is_done(ns_right,True))]
                 Q[s][DOWN] = [(1.0, ns_down, reward, is_done(ns_down,True))]
                 Q[s][LEFT] = [(1.0, ns_left, reward, is_done(ns_left,True))]
-                Q[s][NULL] = [(1.0, s, reward, is_done(ns_null,True)]
+                Q[s][NULL] = [(1.0, s, reward, is_done(ns_null,True))]
             it.iternext()
         return P, Q
 
