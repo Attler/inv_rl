@@ -64,8 +64,13 @@ class RLSearchCirlAlg(BaseCirlAlg):
         if alg == "dqn":
             agent = self.DQN_agent()
 
-        cb = ActionTrajectoryCallback()
+        for i in range(20):
+            cb = ActionTrajectoryCallback()
 
-        agent.test(self.env, nb_episodes=1, verbose=1, visualize=False, callbacks=[cb])
+            agent.test(self.env, nb_episodes=1, verbose=1, visualize=False,
+                        callbacks=[cb])
+
+            print(self.env.avg_traj().reshape(9,9))
+            print(cb.actions)
 
         return cb.actions
