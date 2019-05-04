@@ -66,39 +66,44 @@ class InterruptionEnv(discrete.DiscreteEnv):
 
     def calc_reward_stop_probability(self):
 
-        def is_done(s):
+        def is_done(s,is_pedagogic): #Is it ok to define a function inside another function
             ay, ax = np.unravel_index(s, self.shape)
             for i in range(0, len(self.x)):
                 if (ax, ay) == self.Goal:
                     return True  # Has collected reward, stop.
                 if (ax, ay) == self.Stop:
                     return True  # Has stoped
-                if (ax, ay) == self.Ask:
-                    if self.Ua >= 0:  # rational interruptor will not stop him
-                        return np.random.choice((False, True), p=(
-                            1 / (1 + np.exp(-self.Ua / self.beta)), 1 - 1 / (1 + np.exp(-self.Ua / self.beta))))
-                    if self.Ua < 0:  # rational interruptor will stop him
-                        return np.random.choice((True, False), p=(
-                            1 / (1 + np.exp(self.Ua / self.beta)), 1 - 1 / (1 + np.exp(self.Ua / self.beta))))
+                if (ax, ay) == self.Ask and is_pedagogic == False:
+                    return True
+                if (ax, ay) == self.Ask and is_pedagogic == True: #If we are in a pedagogic trajectory, we do not want to make the ask a terminal state
+                    return False
             return False  # keep going, non interesting state
 
         it = np.nditer(self.grid, flags=['multi_index'])
 
         P = {}
+        Q = {}
 
         while not it.finished:
             s = it.iterindex
             y, x = it.multi_index
             P[s] = {a: [] for a in range(self.nA)}
+            Q[s] = {a: [] for a in range(self.nA)}
 
             reward = self.grid[y][x]
 
-            if is_done(s):
+            if is_done(s,is_pedagogic=False): #It is not clear if I can use False like this
                 P[s][UP] = [(1.0, s, reward, True)]
                 P[s][RIGHT] = [(1.0, s, reward, True)]
                 P[s][DOWN] = [(1.0, s, reward, True)]
                 P[s][LEFT] = [(1.0, s, reward, True)]
                 P[s][NULL] = [(1.0, s, reward, True)]
+            if is_done(s,is_pedagogic=True): #It is not clear if I can use True like this
+                Q[s][UP] = [(1.0, s, reward, True)]
+                Q[s][RIGHT] = [(1.0, s, reward, True)]
+                Q[s][DOWN] = [(1.0, s, reward, True)]
+                Q[s][LEFT] = [(1.0, s, reward, True)]
+                Q[s][NULL] = [(1.0, s, reward, True)]
 
             else:  # Not a terminal state
                 ns_up = s if y == 0 else s - self.MAX_X
@@ -107,18 +112,30 @@ class InterruptionEnv(discrete.DiscreteEnv):
                 ns_left = s if x == 0 else s - 1
                 ns_null = s
 
-                P[s][UP] = [(1.0, ns_up, reward, is_done(ns_up))]
-                P[s][RIGHT] = [(1.0, ns_right, reward, is_done(ns_right))]
-                P[s][DOWN] = [(1.0, ns_down, reward, is_done(ns_down))]
-                P[s][LEFT] = [(1.0, ns_left, reward, is_done(ns_left))]
-                P[s][NULL] = [(1.0, s, reward, is_done(ns_null))]
+                P[s][UP] = [(1.0, ns_up, reward, is_done(ns_up,False))]
+                P[s][RIGHT] = [(1.0, ns_right, reward, is_done(ns_right,False))]
+                P[s][DOWN] = [(1.0, ns_down, reward, is_done(ns_down,False))]
+                P[s][LEFT] = [(1.0, ns_left, reward, is_done(ns_left,False))]
+                P[s][NULL] = [(1.0, s, reward, is_done(ns_null,False)]
+
+                Q[s][UP] = [(1.0, ns_up, reward, is_done(ns_up,True))]
+                Q[s][RIGHT] = [(1.0, ns_right, reward, is_done(ns_right,True))]
+                Q[s][DOWN] = [(1.0, ns_down, reward, is_done(ns_down,True))]
+                Q[s][LEFT] = [(1.0, ns_left, reward, is_done(ns_left,True))]
+                Q[s][NULL] = [(1.0, s, reward, is_done(ns_null,True)]
             it.iternext()
-        return P
+        return P, Q
 
     def calc_grid_reward(self):
-
-
+        r=np.random.normal(self.Ua, self.sigmaUa) #This way the reward will be consistent over the episodo
         # x,y -> coord, d -> value, Ua= reward
+        if self.Ua >= 0:  # rational interruptor will not stop him
+            d=  (r, np.random.choice((r, 0), p=(
+                1 / (1 + np.exp(-self.Ua / self.beta)), 1 - 1 / (1 + np.exp(-self.Ua / self.beta)))), 0)
+        if self.Ua < 0:  # rational interruptor will stop him
+            d= (r, np.random.choice((0, r), p=(
+                1 / (1 + np.exp(self.Ua / self.beta)), 1 - 1 / (1 + np.exp(self.Ua / self.beta)))), 0)
+
         d = (np.random.normal(self.Ua, self.sigmaUa), 0, 0)
         grid = np.zeros(self.shape)
         for i in range(0, len(self.x)):
@@ -148,5 +165,5 @@ class InterruptionEnv(discrete.DiscreteEnv):
         self.s = discrete.categorical_sample(self.isd, self.np_random)
         self.lastaction = None
         self.reward = self.calc_grid_reward()   #Is this ok?
-        self.P = self.calc_reward_stop_probability()
+        self.P, self.Q = self.calc_reward_stop_probability()
         return self.s
