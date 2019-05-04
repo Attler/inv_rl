@@ -37,7 +37,7 @@ class ExhaustiveCirlAlg(BaseCirlAlg):
     def cirl_reward(self, traj : np.ndarray) -> float:
         self.env.reset()
 
-        reward: float
+        reward = 0
         for a in traj:
             _ , reward, terminated, _ = self.env.step(a)
             if terminated:

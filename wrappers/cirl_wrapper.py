@@ -14,7 +14,7 @@ class CirlWrapper(gym.Wrapper):
     The enviroment should return a feature vector in the info dictionary.
     """
 
-    def __init__(self, env: gym.Env, expert_features, traj_state = False):
+    def __init__(self, env: gym.Env, expert_features, traj_state = False, max_steps=20):
         """
         env: gym.Env
             The gym environment to be wrapped.
@@ -37,14 +37,32 @@ class CirlWrapper(gym.Wrapper):
                 shape=(self.obs_n + self.d,),
                 dtype=np.float32)
 
+        self.max_steps = max_steps
+        self.steps = 0
+
+        self.old_feature_dist = self.feature_dist()
+
     def step(self, action):
         next_state, reward, terminated, info = self.env.step(action)
 
-        if terminated:
-            reward -= self.feature_dist()
+        self.steps += 1
+
+        if self.max_steps is not None and self.steps >= self.max_steps:
+            terminated = True
+
+        # reward = 0
+
+
+        new_dist = self.feature_dist()
+
+        reward += self.old_feature_dist
+        reward -= new_dist
+
+        self.old_feature_dist = new_dist
 
         if self.traj_state:
             next_state = self.traj_state_vector(next_state)
+
         return next_state, reward, terminated, {}
 
     def traj_state_vector(self, state):
@@ -57,9 +75,12 @@ class CirlWrapper(gym.Wrapper):
         s = self.env.reset()
         if self.traj_state:
             s = self.traj_state_vector(s)
+        self.steps = 0
+        self.old_feature_dist = self.feature_dist()
+
         return s
 
-    def feature_dist(self, eta=.01):
+    def feature_dist(self, eta=100):
         """ Returns the l2 distance of the average features for the current
         trajectory and the expert features.
         """

@@ -30,7 +30,7 @@ import value_iteration as vi
 
 ###################  RBF #########################
 
-def expert_features(env, policy, n_trajs=100, len_traj=5):
+def expert_features(env, policy, n_trajs=100, len_traj=20):
     """
     env must be a feature env
     """
