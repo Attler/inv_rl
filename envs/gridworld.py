@@ -131,6 +131,6 @@ class GridworldEnv(discrete.DiscreteEnv):
 
         y, x = np.unravel_index(state, self.shape)
 
-        features = [np.linalg.norm([(x, y), (0, 0)]),
-                    np.linalg.norm([(x, y), (self.MAX_X, self.MAX_Y)])]
+        features = [np.linalg.norm([np.array((x, y)) - (0, 0)]),
+                    np.linalg.norm((np.array((x, y)) - np.array((self.MAX_X, self.MAX_Y))))]
         return features
