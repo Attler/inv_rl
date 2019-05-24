@@ -41,7 +41,7 @@ def best_policy(trans_probs, U):
 
 if __name__ == '__main__':
     from envs import gridworld
-    grid = gridworld.GridworldEnv()
+    grid = gridworld.GridworldEnv(shape=(5,5))
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
     pi = best_policy(trans_probs, U)
@@ -52,20 +52,20 @@ if __name__ == '__main__':
 
     def to_mat(u, shape):
         dst = np.zeros(shape)
-        for k, v in u.iteritems():
-            dst[k / shape[1], k % shape[1]] = v
+        for k, v in u.items():
+            dst[k // shape[1], k % shape[1]] = v
         return dst
 
     def add_arrow(pi, shape):
-        for k, v in pi.iteritems():
+        for k, v in pi.items():
             if v == gridworld.UP:
-                plt.arrow(k / shape[1], k % shape[1], -0.45, 0, head_width=0.05)
+                plt.arrow(k // shape[1], k % shape[1], -0.45, 0, head_width=0.05)
             elif v == gridworld.RIGHT:
-                plt.arrow(k / shape[1], k % shape[1], 0, 0.45, head_width=0.05)
+                plt.arrow(k // shape[1], k % shape[1], 0, 0.45, head_width=0.05)
             elif v == gridworld.DOWN:
-                plt.arrow(k / shape[1], k % shape[1], 0.45, 0, head_width=0.05)
+                plt.arrow(k // shape[1], k % shape[1], 0.45, 0, head_width=0.05)
             elif v == gridworld.LEFT:
-                plt.arrow(k / shape[1], k % shape[1], 0, -0.45, head_width=0.05)
+                plt.arrow(k // shape[1], k % shape[1], 0, -0.45, head_width=0.05)
 
     plt.matshow(to_mat(U, grid.shape))
     add_arrow(pi, grid.shape)

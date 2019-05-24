@@ -6,6 +6,7 @@ UP = 0
 RIGHT = 1
 DOWN = 2
 LEFT = 3
+NULL = 4
 
 class GridworldEnv(discrete.DiscreteEnv):
     """
@@ -36,7 +37,7 @@ class GridworldEnv(discrete.DiscreteEnv):
         self.shape = shape
 
         nS = np.prod(shape) # number of states
-        nA = 4              # number of actions
+        nA = 5              # number of actions
 
         self.MAX_Y = shape[0]    # shape of the gridworld, x direction
         self.MAX_X = shape[1]    # shape of the gridworld, y direction
@@ -72,15 +73,17 @@ class GridworldEnv(discrete.DiscreteEnv):
                 P[s][DOWN] = [(1.0, s, reward, True)]
                 P[s][LEFT] = [(1.0, s, reward, True)]
             # Not a terminal state
-            else:           #One may want to include some kind of list of goal states to substitute the next four lines.
-                ns_up = s if y == 0 else s - self.MAX_X # move one full row to the left
-                ns_right = s if x == (self.MAX_X - 1) else s + 1
-                ns_down = s if y == (self.MAX_Y - 1) else s + self.MAX_X # move one full row to the right
-                ns_left = s if x == 0 else s - 1
-                P[s][UP] = [(1.0, ns_up, reward, is_done(ns_up))]
-                P[s][RIGHT] = [(1.0, ns_right, reward, is_done(ns_right))]
-                P[s][DOWN] = [(1.0, ns_down, reward, is_done(ns_down))]
-                P[s][LEFT] = [(1.0, ns_left, reward, is_done(ns_left))]
+            #else:           #One may want to include some kind of list of goal states to substitute the next four lines.
+            ns_up = s if y == 0 else s - self.MAX_X # move one full row to the left
+            ns_right = s if x == (self.MAX_X - 1) else s + 1
+            ns_down = s if y == (self.MAX_Y - 1) else s + self.MAX_X # move one full row to the right
+            ns_left = s if x == 0 else s - 1
+            P[s][UP] = [(1.0, ns_up, reward, False)]
+            P[s][RIGHT] = [(1.0, ns_right, reward, False)]
+            P[s][DOWN] = [(1.0, ns_down, reward, False)]
+            P[s][LEFT] = [(1.0, ns_left, reward, False)]
+            P[s][NULL] = [(1.0, s, reward, False)]
+
 
             it.iternext()
 
@@ -128,6 +131,6 @@ class GridworldEnv(discrete.DiscreteEnv):
 
         y, x = np.unravel_index(state, self.shape)
 
-        features = [np.linalg.norm([(x, y), (0, 0)]),
-                    np.linalg.norm([(x, y), (self.MAX_X, self.MAX_Y)])]
+        features = [np.linalg.norm([np.array((x, y)) - (0, 0)]),
+                    np.linalg.norm((np.array((x, y)) - np.array((self.MAX_X, self.MAX_Y))))]
         return features
