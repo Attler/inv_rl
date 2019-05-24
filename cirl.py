@@ -81,9 +81,9 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
             # P[state][action] = [(prob, n_state, reward, is_done)]
 
-            # state, action, n_state, reward
-            traj.append((state0, action, env.P[state0][action][0][1], env.P[state0][action][0][2]))
-            state0 = env.P[state0][action][0][1] #Update the current state to the new one
+            # state, action, n_state, reward. We use Q instead of P because this way the asking button isn't terminal and the pedagogic trajectory can take both 
+            traj.append((state0, action, env.Q[state0][action][0][1], env.Q[state0][action][0][2]))
+            state0 = env.Q[state0][action][0][1] #Update the current state to the new one
         possible_trajs.append(traj)
 
 
@@ -140,10 +140,14 @@ def to_mat(res, shape):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
+
     grid_shape=(9,9)
     grid = rbfgridworld.RbfGridworldEnv(grid_shape)
     #from envs import gridworld
+
     #grid = gridworld.GridworldEnv(shape=(5,5))
+    from envs import interruption
+    grid = interruption.InterruptionEnv()
 
 
     trans_probs, reward = trans_mat(grid)
