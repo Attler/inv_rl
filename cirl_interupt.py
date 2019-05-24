@@ -6,7 +6,7 @@ from value_iteration import *
 import itertools
 
 
-#From irl-me
+# From irl-me
 def expected_svf(trans_probs, trajs, policy): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
@@ -18,6 +18,7 @@ def expected_svf(trans_probs, trajs, policy): #state value function
         for s in range(n_states):
             mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, np.argmax(policy[pre_s]), s] for pre_s in range(n_states)])
     return np.sum(mu, 1)
+
 
 def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha=0.5):
 
@@ -81,9 +82,9 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
             # P[state][action] = [(prob, n_state, reward, is_done)]
 
-            # state, action, n_state, reward.
-            traj.append((state0, action, env.P[state0][action][0][1], env.P[state0][action][0][2]))
-            state0 = env.P[state0][action][0][1] #Update the current state to the new one
+            # state, action, n_state, reward. We use Q instead of P because this way the asking button isn't terminal and the pedagogic trajectory can take both 
+            traj.append((state0, action, env.Q[state0][action][0][1], env.Q[state0][action][0][2]))
+            state0 = env.Q[state0][action][0][1] #Update the current state to the new one
         possible_trajs.append(traj)
 
 
@@ -99,23 +100,25 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     # Select the best trajectories
     maximum = 0
-    trajs_goodness = {}  # How good is the trajectory according to
+    trajs_goodness={} # How good is the trajectory according to
 
-    eta = 0.0001  # Eta in the formula from CIRL
+    # print(possible_trajs[45])
+
+    eta=0.0001 # Eta in the formula from CIRL
 
     for i, traj in enumerate(possible_trajs):
         sum_of_features = np.zeros(len(env.gen_features(0)))
-        traj_reward = 0
+        traj_reward=0
 
         for transition in traj:
-            sum_of_features += env.gen_features(transition[0])  # setting features = coordinates
+            sum_of_features += env.gen_features(transition[0]) #setting features = coordinates
             traj_reward += transition[3]
 
         sum_of_features += env.gen_features(traj[-1][2])
 
         trajs_goodness[i] = traj_reward - eta * np.linalg.norm(sum_of_features - expert_sum_of_features)
 
-    pedagogical_trajs = []
+    pedagogical_trajs=[]
 
     best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:3]
 
@@ -128,7 +131,6 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     return pedagogical_trajs
 
-
 def to_mat(res, shape):
     dst = np.zeros(shape)
     for i, v in enumerate(res):
@@ -137,10 +139,9 @@ def to_mat(res, shape):
 
 
 if __name__ == '__main__':
-    from envs import rbfgridworld
 
-    grid_shape = (9, 9)
-    grid = rbfgridworld.RbfGridworldEnv(grid_shape)
+    from envs import interruption
+    grid = interruption.InterruptionEnv()
 
 
     trans_probs, reward = trans_mat(grid)
@@ -179,7 +180,7 @@ if __name__ == '__main__':
 
 
     ######CIRL
-    ax1 = plt.subplot(1, 3, 3)
+    ax1 = plt.subplot(1,3,3)
     ax1.set_title("CIRL Rewards")
     plt.matshow(to_mat(res_cirl, grid.shape), cmap=cm.Blues_r, fignum=False)
 
