@@ -1,28 +1,21 @@
-# Inverse Reinforcement Learning
+# Cooperative Inverse Reinforcement Learning
+
+This repository work done at AISC3 towards replicating and extending CIRL ([paper](https://arxiv.org/abs/1606.03137)).
+
+The implementations of IRL are taken from [neka-nat](https://github.com/neka-nat/inv_rl) and the environments are created in OpenAI [gym](https://gym.openai.com/docs/) 
 
 ## Implemented Algorithms
 
 * LP IRL
 * Maximum Entropy IRL
 * Maximum Entropy Deep IRL
+* CIRL with MaxEnt
 
 ## Reward Map
 
-* Ground Truth
 
-![truth](images/ground_truth.png)
+![truth](images/Figure_1.png)
 
-* LP
-
-![lp](images/lp_irl.png)
-
-* Maximum Entropy IRL
-
-![lp](images/max_ent_irl.png)
-
-* Maximum Entropy Deep IRL
-
-![lp](images/max_ent_deep_irl.png)
 
 ## Requirements
 
@@ -30,3 +23,4 @@
 * numpy
 * scipy
 * chainer
+* matplotlib
