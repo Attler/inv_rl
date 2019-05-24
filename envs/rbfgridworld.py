@@ -14,17 +14,21 @@ NULL = 4
 
 class RbfGridworldEnv(discrete.DiscreteEnv):
     """
-
-
     You can take actions in each direction (UP=0, RIGHT=1, DOWN=2, LEFT=3, NULL=4).
-
     """
 
     metadata = {'render.modes': ['human', 'ansi']}
 
-    def __init__(self, random_start=False):
+    def __init__(self, shape=(9,9), random_start=False):
 
-        self.shape = (9, 9)
+        def is_done(s):
+            ay, ax = np.unravel_index(s, self.shape)
+            r = self.grid[ay][ax]
+            if r == -1 or r == 1:
+                return True
+            return False
+
+        self.shape = shape
         self.random_start = random_start
 
         nS = np.prod(self.shape)
@@ -60,20 +64,14 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
             reward = self.grid[y][x]
 
-            def is_done(s):
-                ay, ax = np.unravel_index(s, self.shape)
-                r = self.grid[ay][ax]
-                if r == -1 or r == 1:
-                    return True
-                return False
-
             if is_done(s):
-                P[s][UP] = [(1.0, s, reward, True)]
+                P[s][UP] = [(1.0, s, reward, True)] #[prob, next state, reward, is_done]
                 P[s][RIGHT] = [(1.0, s, reward, True)]
                 P[s][DOWN] = [(1.0, s, reward, True)]
                 P[s][LEFT] = [(1.0, s, reward, True)]
                 P[s][NULL] = [(1.0, s, reward, True)]
             # Not a terminal state
+
             else:
                 ns_up = s if y == 0 else s - self.MAX_X
                 ns_right = s if x == (self.MAX_X - 1) else s + 1
@@ -118,9 +116,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
             plt.show()
 
     def gen_features(self, state):
-
         y, x = np.unravel_index(state, self.shape)
-
         features = []
         for i in range(len(self.centers[0])):
             diff = np.array((x, y)) - np.array((self.centers[0][i], self.centers[1][i]))

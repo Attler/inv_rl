@@ -140,8 +140,9 @@ def to_mat(res, shape):
 
 if __name__ == '__main__':
     from envs import rbfgridworld
-    grid = rbfgridworld.RbfGridworldEnv()
-    from envs import gridworld
+    grid_shape=(9,9)
+    grid = rbfgridworld.RbfGridworldEnv(grid_shape)
+    #from envs import gridworld
     #grid = gridworld.GridworldEnv(shape=(5,5))
 
 
@@ -150,7 +151,7 @@ if __name__ == '__main__':
     #pi = best_policy(trans_probs, U)
 
     # Trajectories
-    n_traj = 16
+    n_traj = 8
     expert_trajs = generate_demons(grid, trans_probs, U, len_traj=n_traj)
     pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 
@@ -169,14 +170,15 @@ if __name__ == '__main__':
     ax2 = plt.subplot(1,3,2)
     ax2.set_title("IRL Rewards")
     plt.matshow(to_mat(res_irl, grid.shape), cmap=cm.Blues_r, fignum=False)
-    xs = []
-    ys = []
+
+    counts = np.zeros(grid_shape)
     for traj in expert_trajs:
         for step in traj:
             y, x = np.unravel_index(step[0], grid.shape)
-            xs.append(x)
-            ys.append(y)
-        plt.scatter(xs, ys, marker='X', color='Black')
+            counts[x,y]+=1
+    for x in range(9):
+        for y in range(9):
+            plt.text(x, y, int(counts[x,y]), fontsize=8)
 
 
     ######CIRL
@@ -184,13 +186,13 @@ if __name__ == '__main__':
     ax1.set_title("CIRL Rewards")
     plt.matshow(to_mat(res_cirl, grid.shape), cmap=cm.Blues_r, fignum=False)
 
-    xs = []
-    ys = []
+    counts = np.zeros((9,9))
     for traj in pedagogic_trajs:
         for step in traj:
             y, x = np.unravel_index(step[0], grid.shape)
-            xs.append(x)
-            ys.append(y)
-        plt.scatter(xs, ys, marker='X', color='Black')
+            counts[x,y]+=1
+    for x in range(9):
+        for y in range(9):
+            plt.text(x, y, int(counts[x,y]), fontsize=8)
 
     plt.show()
