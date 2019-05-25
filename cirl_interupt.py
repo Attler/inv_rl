@@ -169,7 +169,7 @@ if __name__ == '__main__':
     ax2.set_title("IRL Rewards")
     plt.matshow(to_mat(res_irl, grid.shape), cmap=cm.Blues_r, fignum=False)
 
-    counts = np.zeros(grid_shape)
+    counts = np.zeros(grid.shape)
     for traj in expert_trajs:
         for step in traj:
             y, x = np.unravel_index(step[0], grid.shape)

@@ -1,56 +1,14 @@
-import numpy as np
+from max_ent_irl import *
+import itertools
 import matplotlib.pyplot as plt
 from matplotlib import cm
-
-from value_iteration import *
-import itertools
-
-
-#From irl-me
-def expected_svf(trans_probs, trajs, policy): #state value function
-    n_states, n_actions, _ = trans_probs.shape
-    n_t = len(trajs[0])
-    mu = np.zeros((n_states, n_t))
-    for traj in trajs:
-        mu[traj[0][0], 0] += 1
-    mu[:, 0] = mu[:, 0] / len(trajs)
-    for t in range(1, n_t):
-        for s in range(n_states):
-            mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, np.argmax(policy[pre_s]), s] for pre_s in range(n_states)])
-    return np.sum(mu, 1)
-
-def max_ent_irl(feature_matrix, trans_probs, trajs, gamma=0.9, n_epoch=20, alpha=0.5):
-
-    n_states, d_states = feature_matrix.shape
-    _, n_actions, _ = trans_probs.shape
-
-    feature_exp = np.zeros((d_states))
-    for episode in trajs:
-        for step in episode:
-            feature_exp += feature_matrix[step[0], :]
-    feature_exp = feature_exp / len(trajs)
-
-    theta = np.random.uniform(size=(d_states,))
-    for _ in range(n_epoch):
-        r = feature_matrix.dot(theta)
-        v = value_iteration(trans_probs, r, gamma)
-        pi = best_policy(trans_probs, v)
-        exp_svf = expected_svf(trans_probs, trajs, pi)
-        grad = feature_exp - feature_matrix.T.dot(exp_svf)
-        theta += alpha * grad
-
-    return feature_matrix.dot(theta)
-
-
-def feature_matrix(env):
-    return np.eye(env.nS)
 
 
 def dist_feature_matrix(env):
     return np.array([env.gen_features(s) for s in range(env.nS)])
 
 
-def generate_demons(env, trans_probs, U, n_trajs=100, len_traj=5):
+def generate_demos(env, trans_probs, U, n_trajs=100, len_traj=5):
     trajs = []
     for _ in range(n_trajs):
         episode = []
@@ -129,27 +87,19 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
     return pedagogical_trajs
 
 
-def to_mat(res, shape):
-    dst = np.zeros(shape)
-    for i, v in enumerate(res):
-        dst[i // shape[1], i % shape[1]] = v
-    return dst
-
-
 if __name__ == '__main__':
     from envs import rbfgridworld
 
     grid_shape = (9, 9)
     grid = rbfgridworld.RbfGridworldEnv(grid_shape)
 
-
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
-    #pi = best_policy(trans_probs, U)
+    pi = best_policy(trans_probs, U)
 
     # Trajectories
     n_traj = 8
-    expert_trajs = generate_demons(grid, trans_probs, U, len_traj=n_traj)
+    expert_trajs = generate_demos(grid, trans_probs, U, len_traj=n_traj, n_trajs=3)
     pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 
     # Learning
@@ -166,7 +116,7 @@ if __name__ == '__main__':
     ######IRL
     ax2 = plt.subplot(1,3,2)
     ax2.set_title("IRL Rewards")
-    plt.matshow(to_mat(res_irl, grid.shape), cmap=cm.Blues_r, fignum=False)
+    plt.matshow(np.reshape(res_irl, grid.shape), cmap=cm.Blues_r, fignum=False)
 
     counts = np.zeros(grid_shape)
     for traj in expert_trajs:
@@ -175,13 +125,14 @@ if __name__ == '__main__':
             counts[x,y]+=1
     for x in range(9):
         for y in range(9):
-            plt.text(x, y, int(counts[x,y]), fontsize=8)
+            if counts[x, y] != 0:
+                plt.text(x, y, int(counts[x,y]), fontsize=8)
 
 
     ######CIRL
     ax1 = plt.subplot(1, 3, 3)
     ax1.set_title("CIRL Rewards")
-    plt.matshow(to_mat(res_cirl, grid.shape), cmap=cm.Blues_r, fignum=False)
+    plt.matshow(np.reshape(res_cirl, grid.shape), cmap=cm.Blues_r, fignum=False)
 
     counts = np.zeros((9,9))
     for traj in pedagogic_trajs:
@@ -190,6 +141,7 @@ if __name__ == '__main__':
             counts[x,y]+=1
     for x in range(9):
         for y in range(9):
-            plt.text(x, y, int(counts[x,y]), fontsize=8)
+            if counts[x, y] != 0:
+                plt.text(x, y, int(counts[x,y]), fontsize=8)
 
     plt.show()

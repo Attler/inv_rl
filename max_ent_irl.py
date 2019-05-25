@@ -12,7 +12,8 @@ def expected_svf(trans_probs, trajs, policy): #state value function
         for s in range(n_states):
             mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, np.argmax(policy[pre_s]), s] for pre_s in range(n_states)])
     return np.sum(mu, 1)
-            
+
+
 def max_ent_irl(feature_matrix, trans_probs, trajs,
                 gamma=0.9, n_epoch=20, alpha=0.5):
     n_states, d_states = feature_matrix.shape
@@ -39,7 +40,7 @@ def max_ent_irl(feature_matrix, trans_probs, trajs,
 def feature_matrix(env):
     return np.eye(env.nS)
 
-def generate_demons(env, policy, n_trajs=100, len_traj=5):
+def generate_demos(env, policy, n_trajs=100, len_traj=5):
     trajs = []
     for _ in range(n_trajs):
         episode = []
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     print("Generating expert policy")
     pi = best_policy(trans_probs, U)
     print("Generating expert trajectories")
-    trajs = generate_demons(grid, pi, n_trajs=200, len_traj=10)
+    trajs = generate_demos(grid, pi, n_trajs=200, len_traj=10)
 
     print("Running Max-Ent IRL")
     res = max_ent_irl(feature_matrix(grid), trans_probs, trajs)

@@ -92,6 +92,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
         else:
             isd = np.zeros(nS)
             start = np.ravel_multi_index((self.MAX_Y//2, self.MAX_X//2), self.shape)
+            start = np.ravel_multi_index((2, 4), self.shape)
             isd[start] = 1
 
         # We expose the model of the environment for educational purposes

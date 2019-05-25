@@ -1,8 +1,10 @@
 import numpy as np
 
+
 def trans_mat(env):
     return (np.array([[np.eye(1, env.nS, env.P[s][a][0][1])[0] for a in range(env.nA)] for s in range(env.nS)]),
             np.array([env.P[s][0][0][2] for s in range(env.nS)]))
+
 
 def value_iteration(trans_probs, reward, gamma=0.9, epsilon=1e-3):
     """Solving an MDP by value iteration."""
@@ -19,9 +21,11 @@ def value_iteration(trans_probs, reward, gamma=0.9, epsilon=1e-3):
         if delta < epsilon * (1 - gamma) / gamma:
             return U
 
+
 def expected_utility(a, s, U, trans_probs):
     """The expected utility of doing a in state s, according to the MDP and U."""
     return sum([p * U[s1] for s1, p in enumerate(trans_probs[s, a, :])])
+
 
 def best_policy(trans_probs, U):
     """
@@ -39,9 +43,10 @@ def best_policy(trans_probs, U):
         pi[s] = np.random.choice(best_possible_actions)
     return pi
 
+
 if __name__ == '__main__':
     from envs import gridworld
-    grid = gridworld.GridworldEnv(shape=(5,5))
+    grid = gridworld.GridworldEnv(shape=(5, 5))
     trans_probs, reward = trans_mat(grid)
     U = value_iteration(trans_probs, reward)
     pi = best_policy(trans_probs, U)

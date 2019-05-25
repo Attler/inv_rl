@@ -45,7 +45,7 @@ class InterruptionEnv(discrete.DiscreteEnv):
 
         self.grid = self.calc_grid_reward()
 
-        self.P = self.calc_reward_stop_probability()
+        self.P, self.Q = self.calc_reward_stop_probability()
 
 
 
