@@ -2,6 +2,7 @@ from max_ent_irl import *
 import itertools
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import random
 
 
 def dist_feature_matrix(env):
@@ -31,7 +32,10 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
     # Generate all possible trajectories
     possible_trajs = []
 
-    all_possible_action_combinations = itertools.combinations_with_replacement(np.arange(env.nA), len_traj)
+    all_possible_action_combinations = list(itertools.combinations_with_replacement(np.arange(env.nA), len_traj))
+
+    random.shuffle(all_possible_action_combinations)
+
     for combination in all_possible_action_combinations:
         state0 = env.reset()
         traj=[]
@@ -94,7 +98,7 @@ if __name__ == '__main__':
     grid = rbfgridworld.RbfGridworldEnv(grid_shape)
 
     trans_probs, reward = trans_mat(grid)
-    U = value_iteration(trans_probs, reward)
+    U = value_iteration(trans_probs, reward, gamma=0.2)
     pi = best_policy(trans_probs, U)
 
     # Trajectories
@@ -103,8 +107,8 @@ if __name__ == '__main__':
     pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
 
     # Learning
-    res_irl  = max_ent_irl(feature_matrix(grid), trans_probs, expert_trajs)
-    res_cirl = max_ent_irl(feature_matrix(grid), trans_probs, pedagogic_trajs)
+    res_irl  = max_ent_irl(feature_matrix(grid), trans_probs, expert_trajs, alpha=0.4, gamma=0.999)
+    res_cirl = max_ent_irl(feature_matrix(grid), trans_probs, pedagogic_trajs, alpha=0.4, gamma=0.999)
     print("IRL:", res_irl)
     print("CIRL:", res_cirl)
     ##############################################################################

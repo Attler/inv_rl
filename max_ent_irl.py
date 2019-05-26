@@ -1,6 +1,7 @@
 import numpy as np
 from value_iteration import *
 
+
 def expected_svf(trans_probs, trajs, policy): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
@@ -39,6 +40,7 @@ def max_ent_irl(feature_matrix, trans_probs, trajs,
 
 def feature_matrix(env):
     return np.eye(env.nS)
+
 
 def generate_demos(env, policy, n_trajs=100, len_traj=5):
     trajs = []

@@ -12,10 +12,9 @@ DOWN = 2
 LEFT = 3
 NULL = 4
 
+
 class InterruptionEnv(discrete.DiscreteEnv):
     """
-
-
     You can take actions in each direction (UP=0, RIGHT=1, DOWN=2, LEFT=3, NULL=4).
 
     """

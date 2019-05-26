@@ -25,11 +25,11 @@ Install requirements
 
 Run Maximum Entropy IRL
 
-    python3 max_end_irl.py
+    python max_end_irl.py
     
-Run CRIL
+Run CIRL
 
-    python3 cirl.py
+    python cirl.py
 
 
 ## Requirements

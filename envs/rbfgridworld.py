@@ -28,11 +28,14 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
                 return True
             return False
 
+        def is_done(s):
+            return False
+
         self.shape = shape
         self.random_start = random_start
 
         nS = np.prod(self.shape)
-        nA = 5
+        nA = 4
 
         self.MAX_Y = self.shape[0]
         self.MAX_X = self.shape[1]
@@ -44,7 +47,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
         # x,y -> coord, d -> value
         x = (2, 6, 4)
         y = (3, 3, 5)
-        d = (1, 0.95, -1)
+        d = (1, 1, -1)
         self.centers = (x, y)
 
         xi = np.linspace(0, self.shape[0]-1, self.shape[0])
@@ -92,7 +95,7 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
         else:
             isd = np.zeros(nS)
             start = np.ravel_multi_index((self.MAX_Y//2, self.MAX_X//2), self.shape)
-            start = np.ravel_multi_index((2, 4), self.shape)
+            #start = np.ravel_multi_index((2, 4), self.shape)
             isd[start] = 1
 
         # We expose the model of the environment for educational purposes
