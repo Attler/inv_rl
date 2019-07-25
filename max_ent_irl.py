@@ -2,6 +2,7 @@ import numpy as np
 from value_iteration import *
 
 
+
 def expected_svf(trans_probs, trajs, policy): #state value function
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])

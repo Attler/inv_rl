@@ -1,7 +1,6 @@
 import numpy as np
 from gym.envs.toy_text import discrete
 from scipy.interpolate import Rbf
-from scipy.spatial.distance import euclidean
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
