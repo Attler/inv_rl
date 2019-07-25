@@ -1,6 +1,7 @@
 import numpy as np
 from gym.envs.toy_text import discrete
 from scipy.interpolate import Rbf
+from scipy.spatial.distance import cdist
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -55,6 +56,22 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
         rbf = Rbf(x, y, d, function='gaussian')
         self.grid = rbf(XI, YI)
+
+
+
+        theta = np.array((1, 1, -1))
+        centers = np.array([[2, 3],
+                            [6, 3],
+                            [4, 5]], dtype=np.float_)
+
+        grid_index = np.asarray([[y, x] for x, y in np.ndindex(self.shape[0], self.shape[1])], dtype=np.float_)
+
+        self.state_features = np.exp(-(cdist(grid_index, centers) / 1.6) ** 2)
+
+        self.grid = np.dot(self.state_features, theta).reshape(self.shape[0], self.shape[1])
+
+
+
 
         it = np.nditer(self.grid, flags=['multi_index'])
 

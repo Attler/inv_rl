@@ -6,7 +6,7 @@ def trans_mat(env):
             np.array([env.P[s][0][0][2] for s in range(env.nS)]))
 
 
-def value_iteration(trans_probs, reward, gamma=0.9, epsilon=1e-3):
+def value_iteration(trans_probs, reward, gamma=0.9, epsilon=1e-2):
     """Solving an MDP by value iteration."""
     n_states, n_actions, _ = trans_probs.shape
     U1 = {s: 0 for s in range(n_states)}
@@ -18,7 +18,7 @@ def value_iteration(trans_probs, reward, gamma=0.9, epsilon=1e-3):
             U1[s] = rs + gamma * max([sum([p * U[s1] for s1, p in enumerate(trans_probs[s, a, :])])
                                       for a in range(n_actions)])
             delta = max(delta, abs(U1[s] - U[s]))
-        if delta < epsilon * (1 - gamma) / gamma:  # should be delta < epsilon
+        if delta < epsilon:
             return U
 
 

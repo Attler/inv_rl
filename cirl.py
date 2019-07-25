@@ -6,8 +6,7 @@ import random
 from scipy.interpolate import Rbf
 
 
-
-def expected_svf(trans_probs, trajs, policy): #state value function
+def expected_svf(trans_probs, trajs, policy): #state visitation frequency
     n_states, n_actions, _ = trans_probs.shape
     n_t = len(trajs[0])
     mu = np.zeros((n_states, n_t))
@@ -17,9 +16,8 @@ def expected_svf(trans_probs, trajs, policy): #state value function
     for t in range(1, n_t):
         for s in range(n_states):
             mu[s, t] = sum([mu[pre_s, t - 1] * trans_probs[pre_s, np.argmax(policy[pre_s]), s] for pre_s in range(n_states)])
+    return np.sum(mu, 1)
 
-    mu_sum = np.sum(mu, 1)
-    return mu_sum[21], mu_sum[57], mu_sum[41]
 
 def max_ent_irl(feature_matrix, trans_probs, trajs,
                 gamma=0.9, n_epoch=20, alpha=0.5):
@@ -32,16 +30,16 @@ def max_ent_irl(feature_matrix, trans_probs, trajs,
             feature_exp += feature_matrix[step[0], :]
     feature_exp = feature_exp / len(trajs)
 
-    theta = np.random.uniform(-1, 1, 3)
+    theta = np.random.uniform(-1, 1, size=(d_states,))
     for _ in range(n_epoch):
 
-        r = np.array(feature_values(theta))
-        print(r)
+        r = feature_matrix.dot(theta)
         v = value_iteration(trans_probs, r, gamma)
         pi = best_policy(trans_probs, v)
         exp_svf = expected_svf(trans_probs, trajs, pi)
         grad = feature_exp - feature_matrix.T.dot(exp_svf)
         theta += alpha * grad
+        theta = np.tanh(theta)
 
     return feature_matrix.dot(theta)
 
@@ -68,7 +66,7 @@ def generate_demos(env, trans_probs, U, n_trajs=100, len_traj=5):
         env.reset()
         for i in range(len_traj):
             cur_s = env.s
-            policy=best_policy(trans_probs, U)
+            policy = best_policy(trans_probs, U)
             state, reward, done, _ = env.step(policy[cur_s])
             episode.append((cur_s, policy[cur_s], state))
             if done:
@@ -79,7 +77,7 @@ def generate_demos(env, trans_probs, U, n_trajs=100, len_traj=5):
     return trajs
 
 
-def generate_pedagogic(expert_trajs, env, len_traj=10):
+def generate_pedagogic(expert_trajs, env, len_traj=10, n_traj=1):
     
     # Generate all possible trajectories
     possible_trajs = []
@@ -131,7 +129,7 @@ def generate_pedagogic(expert_trajs, env, len_traj=10):
 
     pedagogical_trajs = []
 
-    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:3]
+    best_k = sorted(trajs_goodness, key=trajs_goodness.get, reverse=True)[:n_traj]
 
     print(best_k)
 
@@ -150,17 +148,19 @@ if __name__ == '__main__':
     grid = rbfgridworld.RbfGridworldEnv(grid_shape)
 
     trans_probs, reward = trans_mat(grid)
-    U = value_iteration(trans_probs, reward, gamma=0.2)
+    U = value_iteration(trans_probs, reward, gamma=1.0)
+    print(U)
     pi = best_policy(trans_probs, U)
 
     # Trajectories
-    n_traj = 8
-    expert_trajs = generate_demos(grid, trans_probs, U, len_traj=n_traj, n_trajs=3)
-    pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=n_traj)
+    len_traj = 8
+
+    expert_trajs = generate_demos(grid, trans_probs, U, len_traj=len_traj, n_trajs=1)
+    pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=len_traj, n_traj=2)
 
     # Learning
-    res_irl  = max_ent_irl(feature_matrix(grid), trans_probs, expert_trajs)
-    res_cirl = max_ent_irl(feature_matrix(grid), trans_probs, pedagogic_trajs)
+    res_irl  = max_ent_irl(grid.state_features, trans_probs, expert_trajs, gamma=1.0)
+    res_cirl = max_ent_irl(grid.state_features, trans_probs, pedagogic_trajs, gamma=1.0)
     print("IRL:", res_irl)
     print("CIRL:", res_cirl)
     ##############################################################################
