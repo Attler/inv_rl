@@ -43,26 +43,10 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
 
         P = {}
 
-        # Generate RBF grid
-        # x,y -> coord, d -> value
-        x = (2, 6, 4)
-        y = (3, 3, 5)
-        d = (1, 1, -1)
-        self.centers = (x, y)
-
-        xi = np.linspace(0, self.shape[0]-1, self.shape[0])
-        yi = np.linspace(0, self.shape[1]-1, self.shape[1])
-        XI, YI = np.meshgrid(xi, yi)
-
-        rbf = Rbf(x, y, d, function='gaussian')
-        self.grid = rbf(XI, YI)
-
-
-
         theta = np.array((1, 1, -1))
         centers = np.array([[2, 3],
                             [6, 3],
-                            [4, 5]], dtype=np.float_)
+                            [4, 6]], dtype=np.float_)
 
         grid_index = np.asarray([[y, x] for x, y in np.ndindex(self.shape[0], self.shape[1])], dtype=np.float_)
 
@@ -136,12 +120,11 @@ class RbfGridworldEnv(discrete.DiscreteEnv):
             plt.show()
 
     def gen_features(self, state):
+
         y, x = np.unravel_index(state, self.shape)
-        features = []
-        for i in range(len(self.centers[0])):
-            diff = np.array((x, y)) - np.array((self.centers[0][i], self.centers[1][i]))
-            dist = np.linalg.norm(diff)
-            features.append(dist)
+
+        features = [np.linalg.norm([np.array((x, y)) - (0, 0)]),
+                    np.linalg.norm((np.array((x, y)) - np.array((self.MAX_X, self.MAX_Y))))]
         return features
 
 

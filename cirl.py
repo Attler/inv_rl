@@ -148,19 +148,18 @@ if __name__ == '__main__':
     grid = rbfgridworld.RbfGridworldEnv(grid_shape)
 
     trans_probs, reward = trans_mat(grid)
-    U = value_iteration(trans_probs, reward, gamma=1.0)
-    print(U)
+    U = value_iteration(trans_probs, reward, gamma=0.9)
     pi = best_policy(trans_probs, U)
 
     # Trajectories
-    len_traj = 8
+    len_traj = 15
 
     expert_trajs = generate_demos(grid, trans_probs, U, len_traj=len_traj, n_trajs=1)
-    pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=len_traj, n_traj=2)
+    pedagogic_trajs = generate_pedagogic(expert_trajs, grid, len_traj=len_traj, n_traj=1)
 
     # Learning
-    res_irl  = max_ent_irl(grid.state_features, trans_probs, expert_trajs, gamma=1.0)
-    res_cirl = max_ent_irl(grid.state_features, trans_probs, pedagogic_trajs, gamma=1.0)
+    res_irl  = max_ent_irl(grid.state_features, trans_probs, expert_trajs, gamma=0.9)
+    res_cirl = max_ent_irl(grid.state_features, trans_probs, pedagogic_trajs, gamma=0.9)
     print("IRL:", res_irl)
     print("CIRL:", res_cirl)
     ##############################################################################
